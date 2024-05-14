@@ -36,41 +36,21 @@ static double h_beta(double *D, double *P, int n, int d, double beta, int exclud
 // W(n,dim_y) = 3n^2*dim_y
 static void distance_squared(double *X, double *D, int n, int d)
 {
-    int k;
     for (int i = 0; i < n; i++)
     {
         for (int j = 0; j < n; j++)
         {
             double dist = 0.0;
             double diff;
-
-            // compute squared euclidean distance
-            // vectorized with AVX
-            __m256d vec_dist = _mm256_setzero_pd();
-            __m256d x_slice, y_slice, vec_diff, vec_sq_diff;
-            for (k = 0; k <= d - 4; k += 4) { // alignment?
-                x_slice = _mm256_loadu_pd(&X[i * d + k]);
-                y_slice = _mm256_loadu_pd(&X[j * d + k]);
-                vec_diff = _mm256_sub_pd(x_slice, y_slice);
-                vec_sq_diff = _mm256_mul_pd(vec_diff, vec_diff);
-                vec_dist = _mm256_add_pd(vec_dist, vec_sq_diff);
-            }
-            
-            // handle residual elements that cannot be vectorized
-            double residual_dist = 0.0;
-            for (; k < d; k++) {
+            for (int k = 0; k < d; k++)
+            {
                 diff = X[i * d + k] - X[j * d + k];
-                residual_dist += diff * diff;
+                dist += diff * diff;
             }
-
-            // sum up vectorized and residual elements
-            __m256d vec_sum = _mm256_hadd_pd(vec_dist, vec_dist);
-            double final_dist = residual_dist + ((double*)&vec_sum)[0] + ((double*)&vec_sum)[2];
-            D[i * n + j] = final_dist;
+            D[i * n + j] = dist;
         }
     }
 }
-
 
 static void x2p(double *X, double *P, int n, int d, double perplexity)
 {
