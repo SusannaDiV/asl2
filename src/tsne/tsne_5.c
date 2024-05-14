@@ -67,7 +67,8 @@ static void x2p(double *X, double *P, int n, int d, double perplexity)
     for (int i = 0; i < n; i++)
     {
         beta[i] = 1.0;
-        double h = h_beta(D + i * n, P + i * n, n, d, beta[i], i);
+        int q = i * n;
+        double h = h_beta(D + q, P + q, n, d, beta[i], i);
         double Hdiff = h - logU;
         int tries = 0;
         double tol = 1e-5;
@@ -86,7 +87,7 @@ static void x2p(double *X, double *P, int n, int d, double perplexity)
                 }
                 else
                 {
-                    beta[i] = (beta[i] + betamax) / 2.;
+                    beta[i] = (beta[i] + betamax) * 0.5;
                 }
             }
             else
@@ -94,15 +95,15 @@ static void x2p(double *X, double *P, int n, int d, double perplexity)
                 betamax = beta[i];
                 if (betamin == INFINITY || betamin == -INFINITY)
                 {
-                    beta[i] = beta[i] / 2.;
+                    beta[i] = beta[i] * 0.5;
                 }
                 else
                 {
-                    beta[i] = (beta[i] + betamin) / 2.;
+                    beta[i] = (beta[i] + betamin) * 0.5;
                 }
             }
 
-            h = h_beta(D + i * n, P + i * n, n, d, beta[i], i);
+            h = h_beta(D + q, P + q, n, d, beta[i], i);
             Hdiff = h - logU;
             tries += 1;
         }
@@ -160,7 +161,7 @@ static void compute_gradient(double *P, double *Q, double *Y, double *dY, int n,
 
     memset(dY, 0, 2*n*sizeof(double));
 
-    // 2. Update the gradients
+    /* 0.5 Update the gradients
     int P_idx = 0;
     for (int i = 0; i < n; i++)
     {
