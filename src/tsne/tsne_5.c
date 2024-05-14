@@ -4,6 +4,7 @@
 #include <memory.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <immintrin.h>
 
 #include "tsne.h"
 
@@ -197,9 +198,39 @@ static void compute_gradient(double *P, double *Q, double *Y, double *dY, int n,
 // W(n, dim_y) = n*dim_y
 static void update_gains(double *gains, double *iY, double *dY, int n, int dy)
 {
-    for (int i = 0; i < n; i++)
+    int i, k;
+
+    // Process 4 elements at a time using AVX
+    for (i = 0; i < n; i++)
     {
-        for (int k = 0; k < dy; k++)
+        for (k = 0; k <= dy - 4; k += 4)
+        {
+            // Load 4 elements from iY and dY
+            __m256d iY_vec = _mm256_loadu_pd(&iY[i * dy + k]);
+            __m256d dY_vec = _mm256_loadu_pd(&dY[i * dy + k]);
+            __m256d gains_vec = _mm256_loadu_pd(&gains[i * dy + k]);
+
+            // Compare elements: (dY > 0) != (iY > 0)
+            __m256d zero = _mm256_setzero_pd();
+            __m256d dY_gt_zero = _mm256_cmp_pd(dY_vec, zero, _CMP_GT_OQ);
+            __m256d iY_gt_zero = _mm256_cmp_pd(iY_vec, zero, _CMP_GT_OQ);
+            __m256d condition = _mm256_xor_pd(dY_gt_zero, iY_gt_zero);
+
+            // Set increment and decrement vectors
+            __m256d inc_vec = _mm256_set1_pd(0.2);
+            __m256d dec_vec = _mm256_set1_pd(0.8);
+
+            // Calculate new gains based on condition
+            __m256d gains_inc = _mm256_add_pd(gains_vec, inc_vec);
+            __m256d gains_dec = _mm256_mul_pd(gains_vec, dec_vec);
+            __m256d new_gains = _mm256_blendv_pd(gains_dec, gains_inc, condition);
+
+            // Store updated gains back to memory
+            _mm256_storeu_pd(&gains[i * dy + k], new_gains);
+        }
+
+        // Process any remaining elements
+        for (; k < dy; k++)
         {
             if ((dY[i * dy + k] > 0.0) != (iY[i * dy + k] > 0.0))
             {
