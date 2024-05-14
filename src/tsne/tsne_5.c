@@ -68,7 +68,7 @@ static void x2p(double *X, double *P, int n, int d, double perplexity)
     {
         beta[i] = 1.0;
         int q = i * n;
-        double h = h_beta(D + q, P + q, n, d, beta[i], i);
+        double h = h_beta(q+D, q+P, n, d, beta[i], i);
         double Hdiff = h - logU;
         int tries = 0;
         double tol = 1e-5;
@@ -103,7 +103,7 @@ static void x2p(double *X, double *P, int n, int d, double perplexity)
                 }
             }
 
-            h = h_beta(D + q, P + q, n, d, beta[i], i);
+            h = h_beta(q+D, q+P, n, d, beta[i], i);
             Hdiff = h - logU;
             tries += 1;
         }
@@ -161,7 +161,7 @@ static void compute_gradient(double *P, double *Q, double *Y, double *dY, int n,
 
     memset(dY, 0, 2*n*sizeof(double));
 
-    /* 0.5 Update the gradients
+    // 2. Update the gradients
     int P_idx = 0;
     for (int i = 0; i < n; i++)
     {
