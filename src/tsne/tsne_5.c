@@ -38,16 +38,19 @@ static void distance_squared(double *X, double *D, int n, int d)
 {
     for (int i = 0; i < n; i++)
     {
+        int q = i * d:
+        int m = i * n;
         for (int j = 0; j < n; j++)
         {
+            int w = j * d;
             double dist = 0.0;
             double diff;
             for (int k = 0; k < d; k++)
             {
-                diff = X[i * d + k] - X[j * d + k];
+                diff = X[q + k] - X[w + k];
                 dist += diff * diff;
             }
-            D[i * n + j] = dist;
+            D[m + j] = dist;
         }
     }
 }
