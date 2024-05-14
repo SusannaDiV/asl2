@@ -4,6 +4,7 @@
 #include <memory.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <immintrin.h>
 
 #include "tsne.h"
 
