@@ -12,6 +12,7 @@ static double h_beta(double *D, double *P, int n, int d, double beta, int exclud
 {
     double sumP = 0.0;
     double sumDP = 0.0;
+    
     for (int i = 0; i < n; i++)
     {
         if (i == exclude_index)
@@ -20,18 +21,36 @@ static double h_beta(double *D, double *P, int n, int d, double beta, int exclud
             continue;
         }
 
-        P[i] = exp(-D[i] * beta);
+        P[i] = exp(-D[i] * beta); // use this? https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=exponential&ig_expand=748,2811,2816
         sumP += P[i];
         sumDP += D[i] * P[i];
     }
-
-    for (int i = 0; i < n; i++)
-    {
-        P[i] /= sumP; // WTF do this every time? We need only the final P
+    
+    double inv_sumP = 1.0 / sumP;
+    __m256d vec_inv_sumP = _mm256_set1_pd(inv_sumP);
+    
+    int i = 0;
+    __m256d slice_P;
+    for (; i <= n - 4; i += 4) { // alignment? 
+        slice_P = _mm256_loadu_pd(&P[i]);
+        slice_P = _mm256_mul_pd(slice_P, vec_inv_sumP);
+        _mm256_storeu_pd(&P[i], slice_P);
     }
 
-    return log(sumP) + beta * sumDP / sumP;
+    for (; i < n - 4; i += 4) { 
+        __m256 inv_sumP_v = _mm256_set1_ps(inv_sumP);
+        __m256* P_v = (__m256*)&P[i];
+        *P_v = _mm256_mul_ps(*P_v, inv_sumP_v);
+    }
+
+    double di = sumDP / sumP;
+    double l = log(sumP);
+    double f = beta * di;
+    double result = l + f;
+    return result;
 }
+
+
 
 
 // W(n,dim_y) = 3n^2*dim_y
