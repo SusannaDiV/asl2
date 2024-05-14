@@ -27,6 +27,7 @@ extern "C"
 #include "tsne/tsne_2.h"
 #include "tsne/tsne_3.h"
 #include "tsne/tsne_4.h"
+#include "tsne/tsne_5.h"
 // Add more implementations here!
 }
 
@@ -62,6 +63,7 @@ void register_functions()
     register_function(&tsne_2, "1_Online_Q");
     register_function(&tsne_3, "2_Compress_P");
     register_function(&tsne_4, "3_Next");
+    register_function(&tsne_5, "4_AVX_Rest");
 }
 
 tsne_data copy_input(tsne_data input)
