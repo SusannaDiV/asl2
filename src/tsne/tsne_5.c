@@ -280,16 +280,30 @@ static void center_y(double *Y, int n, int dy)
 }
 
 // Stops early exaggeration which divides all p's by 4.
-static void multiply_p(double *P, int n, double factor)
-{
-    for (int i = 0; i < n; i++)
-    {
-        for (int j = 0; j < n; j++)
-        {
-            P[i * n + j] *= factor;
+static void multiply_p(double *P, int n, double factor) {
+    int remainder = n % 4;
+    int limit = n - remainder;
+    __m256d factor_vec = _mm256_set1_pd(factor);
+    __m256d one_vec = _mm256_set1_pd(1.0);
+
+    for (int i = 0; i < n; i++) {
+        int m = i * n;
+
+        for (int j = 0; j < limit; j += 4) {
+            int idx1 = m + j;
+            __m256d p_values = _mm256_loadu_pd(&P[idx1]);
+            __m256d mask = _mm256_cmp_pd(_mm256_set1_pd(i), p_values, _CMP_NEQ_OQ);
+            __m256d new_values = _mm256_blendv_pd(p_values, _mm256_mul_pd(p_values, factor_vec), mask);
+            _mm256_storeu_pd(&P[idx1], new_values);
+        }
+
+        for (int j = limit; j < n; j++) {
+            int idx = m + j;
+            P[idx] *= (i != j) ? factor : 1.0;
         }
     }
 }
+
 
 uint64_t tsne_5_flops(tsne_data input, tsne_hyperparameters hyperparams) {
     uint64_t n = input.n;
