@@ -68,8 +68,8 @@ static void x2p(double *X, double *P, int n, int d, double perplexity)
     {
         beta[i] = 1.0;
         int q = i * n;
-        double w = q + D;
-        double m = q + P;
+        double* w = q + D;
+        double* m = q + P;
         double h = h_beta(w, m, n, d, beta[i], i);
         double Hdiff = h - logU;
         int tries = 0;
