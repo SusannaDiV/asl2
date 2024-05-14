@@ -38,7 +38,7 @@ static void distance_squared(double *X, double *D, int n, int d)
 {
     for (int i = 0; i < n; i++)
     {
-        int q = i * d:
+        int q = i * d;
         int m = i * n;
         for (int j = 0; j < n; j++)
         {
