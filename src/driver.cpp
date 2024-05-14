@@ -60,8 +60,8 @@ void register_functions()
 {
     // Register more functions here!
     register_function(&tsne_1, "0_Baseline");
-    //register_function(&tsne_2, "1_Online_Q");
-    //register_function(&tsne_3, "2_Compress_P");
+    register_function(&tsne_2, "1_Online_Q");
+    register_function(&tsne_3, "2_Compress_P");
     register_function(&tsne_5, "uga");
     register_function(&tsne_4, "3_Next");
 }
