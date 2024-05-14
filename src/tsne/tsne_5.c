@@ -121,13 +121,17 @@ static void calculate_p(double *X, double *P, int n, int dx, double perplexity)
 
     for (int i = 0; i < n; i++)
     {
+        int q = i * n;
         for (int j = i+1; j < n; j++)
         {
-            double tmp = (P[i * n + j] + P[j * n + i]) / (2*n);
+            int w = j * n;
+            int r = w + i;
+            int m = q + j;
+            double tmp = (P[m] + P[r]) / (2*n);
             tmp = fmax(tmp, 1e-12);
 
-            P[i * n + j] = tmp;
-            P[j * n + i] = tmp;
+            P[m] = tmp;
+            P[r] = tmp;
         }
     }
 
