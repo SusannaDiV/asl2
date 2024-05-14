@@ -11,7 +11,6 @@ static double h_beta(double *D, double *P, int n, int d, double beta, int exclud
 {
     double sumP = 0.0;
     double sumDP = 0.0;
-
     for (int i = 0; i < n; i++)
     {
         if (i == exclude_index)
@@ -27,11 +26,12 @@ static double h_beta(double *D, double *P, int n, int d, double beta, int exclud
 
     for (int i = 0; i < n; i++)
     {
-        P[i] /= sumP;
+        P[i] /= sumP; // WTF do this every time? We need only the final P
     }
 
     return log(sumP) + beta * sumDP / sumP;
 }
+
 
 // W(n,dim_y) = 3n^2*dim_y
 static void distance_squared(double *X, double *D, int n, int d)
