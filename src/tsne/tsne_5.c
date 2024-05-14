@@ -92,7 +92,7 @@ static void distance_squared(double *X, double *D, int n, int d)
 }
 
 
-static void x2p(double *X, double *P, int n, int d, double perplexity)
+static void x2p(double *X, double *P, int n, int d, double perplexity)  //last function to vectorize
 {
     double *D = (double *) malloc(sizeof(double) * n * n);
     double *beta = (double *) malloc(sizeof(double) * n);
@@ -104,7 +104,8 @@ static void x2p(double *X, double *P, int n, int d, double perplexity)
     for (int i = 0; i < n; i++)
     {
         beta[i] = 1.0;
-        double h = h_beta(D + i * n, P + i * n, n, d, beta[i], i);
+        int m = i * n;
+        double h = h_beta(D + m, P + m, n, d, beta[i], i);
         double Hdiff = h - logU;
         int tries = 0;
         double tol = 1e-5;
@@ -112,42 +113,24 @@ static void x2p(double *X, double *P, int n, int d, double perplexity)
         double betamin = -INFINITY;
         double betamax = INFINITY;
 
-        while (fabs(Hdiff) > tol && tries < 50)
-        {
-            if (Hdiff > 0)
-            {
+        while (fabs(Hdiff) > tol && tries < 50) {
+            double new_beta;
+            if (Hdiff > 0) {
                 betamin = beta[i];
-                if (betamax == INFINITY || betamax == -INFINITY)
-                {
-                    beta[i] = beta[i] * 2.;
-                }
-                else
-                {
-                    beta[i] = (beta[i] + betamax) / 2.;
-                }
-            }
-            else
-            {
+                new_beta = (betamax == INFINITY || betamax == -INFINITY) ? beta[i] * 2.0 : (beta[i] + betamax) * 0.5;
+            } else {
                 betamax = beta[i];
-                if (betamin == INFINITY || betamin == -INFINITY)
-                {
-                    beta[i] = beta[i] / 2.;
-                }
-                else
-                {
-                    beta[i] = (beta[i] + betamin) / 2.;
-                }
+                new_beta = (betamin == INFINITY || betamin == -INFINITY) ? beta[i] * 0.5 : (beta[i] + betamin) * 0.5;
             }
 
-            h = h_beta(D + i * n, P + i * n, n, d, beta[i], i);
+            h = h_beta(D + m, P + m, n, d, new_beta, i);
             Hdiff = h - logU;
+            beta[i] = new_beta;
             tries += 1;
         }
     }
-
-    free(D);
-    free(beta);
 }
+
 
 static void calculate_p(double *X, double *P, int n, int dx, double perplexity)
 {
